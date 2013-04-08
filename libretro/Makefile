@@ -41,14 +41,12 @@ SOURCE_DIR := $(YABAUSE_DIR)/src
 SOURCES_C := $(SOURCE_DIR)/osdcore.c \
 	$(SOURCE_DIR)/bios.c \
 	$(SOURCE_DIR)/c68k/c68k.c \
-	$(SOURCE_DIR)/c68k/gen68k.c \
 	$(SOURCE_DIR)/cdbase.c \
 	$(SOURCE_DIR)/cheat.c \
 	$(SOURCE_DIR)/coffelf.c \
 	$(SOURCE_DIR)/cs0.c \
 	$(SOURCE_DIR)/cs1.c \
 	$(SOURCE_DIR)/cs2.c \
-	$(SOURCE_DIR)/debug.c \
 	$(SOURCE_DIR)/error.c \
 	$(SOURCE_DIR)/m68kc68k.c \
 	$(SOURCE_DIR)/m68kcore.c \
@@ -72,13 +70,9 @@ SOURCES_C := $(SOURCE_DIR)/osdcore.c \
 	$(SOURCE_DIR)/titan/titan.c \
 	$(SOURCE_DIR)/vdp1.c \
 	$(SOURCE_DIR)/vdp2.c \
-	$(SOURCE_DIR)/vdp2debug.c \
-	$(SOURCE_DIR)/vidogl.c \
 	$(SOURCE_DIR)/vidshared.c \
 	$(SOURCE_DIR)/vidsoft.c \
 	$(SOURCE_DIR)/yabause.c \
-	$(SOURCE_DIR)/ygl.c \
-	$(SOURCE_DIR)/yglshader.c
 
 LIBRETRO_SOURCES := libretro.c
 
@@ -91,7 +85,7 @@ OBJECTS := $(SOURCES:.c=.o) $(SOURCES_C:.c=.o) $(C68KEXEC_OBJECT)
 all: $(TARGET)
 
 ifeq ($(DEBUG), 0)
-   FLAGS += -O3
+   FLAGS += -O2
 else
    FLAGS += -O0 -g
 endif
@@ -111,7 +105,7 @@ WARNINGS := -Wall \
 	-Wno-overflow
 
 FLAGS += -D__LIBRETRO__ $(ENDIANNESS_DEFINES) -DSIZEOF_DOUBLE=8 $(WARNINGS) \
-			-DUSE_SCSP2=1 -DNO_CLI -DHAVE_SYS_TIME_H -DHAVE_GETTIMEOFDAY -DVERSION=\"0.9.12\" -DHAVE_STRCASECMP
+			-DUSE_SCSP2=1 -DNO_CLI -DHAVE_SYS_TIME_H -DHAVE_GETTIMEOFDAY -DVERSION=\"0.9.12\" -DHAVE_STRCASECMP -DUSE_16BPP=1 -DUSE_RGB_565=1 -DFRONTEND_SUPPORTS_RGB565
 
 CXXFLAGS += $(FLAGS)
 CFLAGS += $(FLAGS) -std=gnu99
@@ -126,7 +120,7 @@ $(TARGET): $(OBJECTS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 	
 $(C68KEXEC_OBJECT): $(C68KEXEC_SOURCE)
-	$(CC) -c -o $@ $< $(CFLAGS) -O0
+	$(CC) -c -o $@ $< $(CFLAGS)
 
 clean:
 	rm -f $(TARGET) $(OBJECTS)
