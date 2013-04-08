@@ -85,242 +85,59 @@ static void update_input()
     input_poll_cb();
 
 	if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP))
-	{
 		PerPadUpPressed(c1);
-	}
 	else
-	{
 		PerPadUpReleased(c1);
-	}
 	if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN))
-	{
 		PerPadDownPressed(c1);
-	}
 	else
-	{
 		PerPadDownReleased(c1);
-	}
 	if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT))
-	{
 		PerPadLeftPressed(c1);
-	}
 	else
-	{
 		PerPadLeftReleased(c1);
-	}
 	if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT))
-	{
 		PerPadRightPressed(c1);
-	}
 	else
-	{
 		PerPadRightReleased(c1);
-	}
 	if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y))
-	{
 		PerPadAPressed(c1);
-	}
 	else
-	{
 		PerPadAReleased(c1);
-	}
 	if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B))
-	{
 		PerPadBPressed(c1);
-	}
 	else
-	{
 		PerPadBReleased(c1);
-	}
 	if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A))
-	{
 		PerPadCPressed(c1);
-	}
 	else
-	{
 		PerPadCReleased(c1);
-	}
 	if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X))
-	{
 		PerPadXPressed(c1);
-	}
 	else
-	{
 		PerPadXReleased(c1);
-	}
 	if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L))
-	{
 		PerPadYPressed(c1);
-	}
 	else
-	{
 		PerPadYReleased(c1);
-	}
 	if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R))
-	{
 		PerPadZPressed(c1);
-	}
 	else
-	{
 		PerPadZReleased(c1);
-	}
 	if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START))
-	{
 		PerPadStartPressed(c1);
-	}
 	else
-	{
 		PerPadStartReleased(c1);
-	}
 	if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2))
-	{
 		PerPadLTriggerPressed(c1);
-	}
 	else
-	{
 		PerPadLTriggerReleased(c1);
-	}
 	if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R2))
-	{
 		PerPadRTriggerPressed(c1);
-	}
 	else
-	{
 		PerPadRTriggerReleased(c1);
-	}
-
-	/*
-	unsigned i;
-	unsigned char pad[1];
-	
-	pad[0] = 0;
-	
-	for ( i = 0; i < 13; i++)
-	{
-		pad[0] |= input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, bindmap[i].retro) ? bindmap[i].saturn : 0;
-	}*/
 }
 
-//PERLIBRETROJoy
-/*
-#define PERCORE_LIBRETROJOY 45
-
-static PerPad_struct *pad[12];
-
-int PERLIBRETROJoyInit(void);
-void PERLIBRETROJoyDeInit(void);
-int PERLIBRETROJoyHandleEvents(void);
-void PERLIBRETROJoyNothing(void);
-
-u32 PERLIBRETROJoyScan(void);
-void PERLIBRETROJoyFlush(void);
-void PERLIBRETROKeyName(u32 key, char * name, int size);
-
-PerInterface_struct PERLIBRETROJoy = {
-    PERCORE_LIBRETROJOY,
-    "Libretro Joystick Interface",
-    PERLIBRETROJoyInit,
-    PERLIBRETROJoyDeInit,
-    PERLIBRETROJoyHandleEvents,
-    PERLIBRETROJoyNothing,
-    PERLIBRETROJoyScan,
-    1,
-    PERLIBRETROJoyFlush
-    #ifdef PERKEYNAME
-    ,PERLIBRETROKeyName
-    #endif
-};
-
-extern u8* libretroyab_inputports[4];
-static u16 lastportstate[4];
-
-int PERLIBRETROJoyInit(void) {
-	//Reset
-	PerPortReset();
-
-	//Add the pads
-	pad[0] = PerPadAdd(&PORTDATA1);
-	pad[1] = PerPadAdd(&PORTDATA2);
-
-	//Add the button mapping
-	for(int i = 0; i != 13; i ++)
-	{
-		PerSetKey(((0 << 16) | i) + 1, i, pad[0]);
-		PerSetKey(((1 << 16) | i) + 1, i, pad[1]);
-	}
-
-	return 0;
-}
-
-void PERLIBRETROJoyDeInit(void)
-{
-}
-
-void PERLIBRETROJoyNothing(void)
-{
-}
-
-int PERLIBRETROJoyHandleEvents(void) {
-	// check each joysticks
-	for(int i = 0; i != 4; i ++)
-	{
-		//uint32_t newportstate = Input::GetPort<2>(i);
-		uint32_t newportstate = 0;
-		
-		for(int j = 0; j != 16; j ++)
-		{
-			if(newportstate & (1 << j))
-			{
-				PerKeyDown((i << 16) + j + 1);
-			}
-			else
-			{
-				PerKeyUp((i << 16) + j + 1);
-			}
-		}
-	}
-
-	// execute yabause
-	if ( YabauseExec() != 0 )
-	{
-		return -1;
-	}
-
-	// return success
-	return 0;
-}
-
-u32 PERLIBRETROJoyScan( void )
-{
-	for(int i = 0; i != 4; i ++)
-	{
-		//uint32_t portdata = Input::GetPort<2>(i);
-		uint32_t portdata = 0;
-
-		if(portdata)
-		{
-			for(int j = 0; j != 16; j ++)
-			{
-				if(portdata & (1 << j))
-				{
-					return ((i << 16) | j) + 1;
-				}
-			}
-		}
-	}
-
-	return 0;
-}
-
-void PERLIBRETROJoyFlush(void)
-{
-}
-
-void PERLIBRETROKeyName(u32 key, char * name, UNUSED int size)
-{
-	sprintf(name, "%x", (int)key);
-}
-*/
 // SNDLIBRETRO
 #define SNDCORE_LIBRETRO   11
 #define SAMPLERATE 44100
@@ -592,7 +409,6 @@ bool retro_load_game(const struct retro_game_info *info)
 	yinit.biospath = NULL;
 	
 	yinit.percoretype = PERCORE_DEFAULT;
-	//yinit.percoretype = PERCORE_LIBRETROJOY;
 	yinit.sh2coretype = SH2CORE_INTERPRETER;
 	
 	yinit.vidcoretype = VIDCORE_SOFT;
@@ -606,7 +422,7 @@ bool retro_load_game(const struct retro_game_info *info)
 
     yinit.videoformattype = VIDEOFORMATTYPE_NTSC;
 
-    yinit.frameskip = true;
+    yinit.frameskip = false;
     yinit.clocksync = 0;
     yinit.basetime = 0;
     yinit.usethreads = 0;
