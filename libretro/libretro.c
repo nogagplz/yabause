@@ -5,6 +5,9 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#ifndef __CELLOS_LV2__
+//#include <malloc.h>
+#endif
 
 #ifdef _MSC_VER
 #define snprintf _snprintf
@@ -34,6 +37,11 @@ static PerPad_struct *c1, *c2 = NULL;
 bool FPSisOn = false;
 bool firstRun = true;
 
+uint16_t *videoBuffer = NULL;
+static uint16_t frame_buffer[704*512];
+int game_width;
+int game_height;
+
 static retro_video_refresh_t video_cb;
 static retro_input_poll_t input_poll_cb;
 static retro_input_state_t input_state_cb;
@@ -46,7 +54,29 @@ void retro_set_audio_sample(retro_audio_sample_t cb) { (void)cb; }
 void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb) { audio_batch_cb = cb; }
 void retro_set_input_poll(retro_input_poll_t cb) { input_poll_cb = cb; }
 void retro_set_input_state(retro_input_state_t cb) { input_state_cb = cb; }
+/*
+typedef struct
+{
+   unsigned retro;
+   unsigned saturn;
+} keymap;
 
+static const keymap bindmap[] = {
+   { RETRO_DEVICE_ID_JOYPAD_B, PERPAD_B },
+   { RETRO_DEVICE_ID_JOYPAD_A, PERPAD_C },
+   { RETRO_DEVICE_ID_JOYPAD_X, PERPAD_Y },
+   { RETRO_DEVICE_ID_JOYPAD_Y, PERPAD_A },
+   { RETRO_DEVICE_ID_JOYPAD_START, PERPAD_START },
+   { RETRO_DEVICE_ID_JOYPAD_L, PERPAD_X },
+   { RETRO_DEVICE_ID_JOYPAD_R, PERPAD_Z },
+   { RETRO_DEVICE_ID_JOYPAD_UP, PERPAD_UP },
+   { RETRO_DEVICE_ID_JOYPAD_DOWN, PERPAD_DOWN },
+   { RETRO_DEVICE_ID_JOYPAD_LEFT, PERPAD_LEFT },
+   { RETRO_DEVICE_ID_JOYPAD_RIGHT, PERPAD_RIGHT },
+   { RETRO_DEVICE_ID_JOYPAD_L2, PERPAD_LEFT_TRIGGER },
+   { RETRO_DEVICE_ID_JOYPAD_R2, PERPAD_RIGHT_TRIGGER }, 
+};
+*/
 static void update_input()
 {
     if (!input_poll_cb)
@@ -272,11 +302,23 @@ int YuiSetVideoMode(int width, int height, int bpp, int fullscreen)
 
 void updateCurrentResolution(void)
 {
+    int current_width = 320;
+    int current_height = 240;
+
+    // Test if VIDCore valid AND NOT the Dummy Interface (or at least VIDCore->id != 0). 
+    // Avoid calling GetGlSize if Dummy/id=0 is selected
+    if (VIDCore && VIDCore->id) 
+    {
+        VIDCore->GetGlSize(&current_width, &current_height);
+    }
+    game_width = current_width;
+    game_height = current_height;
 }
 
 void YuiSwapBuffers(void) 
 {
     updateCurrentResolution();
+    memcpy(videoBuffer, dispbuffer, sizeof(u16) * game_width * game_height);
 }
 
 /************************************
@@ -300,8 +342,8 @@ void retro_get_system_av_info(struct retro_system_av_info *info)
     // Just assume NTSC for now. TODO: Verify FPS.
     info->timing.fps            = 60;
     info->timing.sample_rate    = 44100;
-    info->geometry.base_width   = 320;
-    info->geometry.base_height  = 240;
+    info->geometry.base_width   = game_width;
+    info->geometry.base_height  = game_height;
     info->geometry.max_width    = 704;
     info->geometry.max_height   = 512;
     info->geometry.aspect_ratio = 4.0 / 3.0;
@@ -383,7 +425,7 @@ bool retro_load_game(const struct retro_game_info *info)
     yinit.frameskip = false;
     yinit.clocksync = 0;
     yinit.basetime = 0;
-    yinit.usethreads = 1;
+    yinit.usethreads = 0;
 
    return true;
 }
@@ -423,17 +465,14 @@ size_t retro_get_memory_size(unsigned id)
 
 void retro_init(void)
 {
-   enum retro_pixel_format rgb565;
-
-#ifdef FRONTEND_SUPPORTS_RGB565
-   rgb565 = RETRO_PIXEL_FORMAT_RGB565;
-   if(environ_cb(RETRO_ENVIRONMENT_SET_PIXEL_FORMAT, &rgb565))
-      fprintf(stderr, "Frontend supports RGB565 - will use that instead of XRGB1555.\n");
-#endif
-
+	game_width = 320;
+	game_height = 240;
+	
     const char *dir = NULL;
 	//TODO: setup RETRO_ENVIRONMENT_GET_SAVES_DIRECTORY
 
+	videoBuffer = (u16 *)calloc(sizeof(u16), 704 * 512);
+    
 	//PerPad Init
     PerPortReset();
     c1 = PerPadAdd(&PORTDATA1);
@@ -446,6 +485,7 @@ void retro_init(void)
 void retro_deinit(void)
 {
 	YabauseDeInit();
+	free(videoBuffer);
 }
 
 void retro_reset(void)
@@ -456,7 +496,6 @@ void retro_reset(void)
 
 void retro_run(void) 
 {
-   unsigned width, height;
 	update_input();
 	
    audio_size = SAMPLEFRAME;
@@ -473,9 +512,16 @@ void retro_run(void)
 		ScspMuteAudio(SCSP_MUTE_SYSTEM);
 	}
 
-   if (VIDCore && VIDCore->id) 
-      VIDCore->GetGlSize(&width, &height);
+   for (unsigned i = 0; i < game_height * game_width; i++)
+   {
+      uint32_t source = dispbuffer[i];
 
-	video_cb(dispbuffer, width, height, width << 1);
+      uint16_t r = ((source & 0xF80000) >> 19);
+      uint16_t g = ((source & 0x00F800) >> 6);
+      uint16_t b = ((source & 0x0000F8) << 7);
+      videoBuffer[i] = r | g | b;
+   }
+	
+	video_cb(videoBuffer, game_width, game_height, game_width * 2);
 }
 
