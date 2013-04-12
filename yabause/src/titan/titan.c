@@ -135,21 +135,26 @@ static INLINE int FASTCALL TitanTransBit(u32 pixel)
    return pixel & 0x80000000;
 }
 
-static u32 TitanDigPixel(int * priority, int pos)
+static u32 TitanDigPixel(int priority, int pos)
 {
    u32 pixel = 0;
-   while((*priority > -1) && (! pixel))
+   while((priority > -1) && (! pixel))
    {
-      pixel = tt_context.vdp2framebuffer[*priority][pos];
-      (*priority)--;
+      pixel = tt_context.vdp2framebuffer[priority][pos];
+      priority--;
    }
-   tt_context.vdp2framebuffer[*priority + 1][pos] = 0;
-   if (*priority == -1) return pixel;
+   tt_context.vdp2framebuffer[priority + 1][pos] = 0;
+   if (priority == -1) return pixel;
 
    if (tt_context.trans(pixel))
    {
       u32 bottom = TitanDigPixel(priority, pos);
       pixel = tt_context.blend(pixel, bottom);
+   }
+   else while (priority > 0)
+   {
+      tt_context.vdp2framebuffer[priority][pos] = 0;
+      priority--;
    }
    return pixel;
 }
@@ -216,7 +221,7 @@ void TitanSetBlendingMode(int blend_mode)
    if (blend_mode == TITAN_BLEND_BOTTOM)
    {
       tt_context.blend = TitanBlendPixelsBottom;
-      tt_context.trans = TitanTransAlpha;
+      tt_context.trans = TitanTransBit;
    }
    else if (blend_mode == TITAN_BLEND_ADD)
    {
@@ -291,12 +296,11 @@ void TitanPutShadow(int priority, s32 x, s32 y)
 void TitanRender(pixel_t * dispbuffer)
 {
    u32 dot;
-   int i, p;
+   int i;
 
    for (i = 0; i < (tt_context.vdp2width * tt_context.vdp2height); i++)
    {
-      p = 7;
-      dot = TitanDigPixel(&p, i);
+      dot = TitanDigPixel(7, i);
       if (dot)
       {
          dispbuffer[i] = TitanFixAlpha(dot);
