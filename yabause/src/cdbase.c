@@ -33,6 +33,10 @@
 #endif
 #endif
 
+#ifdef _WIN32
+#define HAVE_WFOPEN
+#endif
+
 #ifndef HAVE_WFOPEN
 static char * wcsdupstr(const wchar_t * path)
 {
