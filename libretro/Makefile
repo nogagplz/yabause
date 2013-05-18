@@ -12,20 +12,22 @@ else ifneq ($(findstring MINGW,$(shell uname -a)),)
 endif
 endif
 
+TARGET_NAME = yabause
+
 ifeq ($(platform), unix)
-   TARGET := libretro.so
+   TARGET := $(TARGET_NAME)_libretro.so
    fpic := -fPIC
    SHARED := -shared -Wl,--no-undefined -Wl,--version-script=link.T
    ENDIANNESS_DEFINES := -DLSB_FIRST
    FLAGS += -DHAVE_MKDIR
 else ifeq ($(platform), osx)
-   TARGET := libretro.dylib
+   TARGET := $(TARGET_NAME)_libretro.dylib
    fpic := -fPIC
    SHARED := -dynamiclib
    ENDIANNESS_DEFINES := -DLSB_FIRST
    FLAGS += -DHAVE_MKDIR
 else
-   TARGET := retro.dll
+   TARGET := $(TARGET_NAME)_libretro.dll
    CC = gcc
    CXX = g++
    SHARED := -shared -Wl,--no-undefined -Wl,--version-script=link.T
